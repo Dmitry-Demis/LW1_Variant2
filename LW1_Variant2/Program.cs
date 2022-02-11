@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace LW1_Variant2
 {
@@ -10,7 +11,7 @@ namespace LW1_Variant2
     {
         static void Main(string[] args)
         {
-            SecondLaboratory();
+            ThirdLaboratory();
         }
         static void FirstLaboratory()
         {
@@ -92,5 +93,54 @@ namespace LW1_Variant2
                 }
             }
         }
+
+        static void ThirdLaboratory()
+        {
+            // Считывание открытого текста
+            const string path = @"PlainText.TXT";
+            var key = "B";
+            BitArray bitArray = new BitArray(new bool[] { true, false, true, true, false });
+           // BitArray bitArray = new BitArray(Encoding.ASCII.GetBytes(key));
+            Console.Write($"{new string(' ', 8)}");
+            foreach (bool b in bitArray)
+                Console.Write(b ? 1 : 0);
+            Console.WriteLine();
+            bitArray = ShiftLeftCycled(bitArray, 2);           
+            
+            using (var sw = new BinaryReader(File.Open(path, FileMode.Open)))
+            {
+                var result = sw.ReadBytes((int)new FileInfo(path).Length);
+
+            }
+            //BitArray bitArray = new BitArray()
+            //string[] keys = new string[11];
+            //for (int i = 1; i < keys.Length; i++)
+            //{
+            //    keys[i] = (key[i-1]<<<3)
+            //}
+            static BitArray ShiftLeftCycled(BitArray bitArray, int bitCount)
+            {
+                var leftShift = (BitArray)bitArray.Clone();
+                var rightShift = (BitArray)bitArray.Clone();
+                (leftShift).LeftShift(bitCount);
+                //rightShift.RightShift(bitArray.Length - bitCount);
+                //Console.Write($"LEFT_ {bitCount} ");
+                foreach (bool b in leftShift)
+                    Console.Write(b ? 1 : 0);
+                //Console.WriteLine();                
+                //Console.Write($"RIGHT {bitCount} ");
+                //foreach (bool b in rightShift)
+                //    Console.Write(b ? 1 : 0);
+                //Console.WriteLine();
+                //var result =  leftShift.Or(rightShift);
+                //Console.Write($"RESULT{bitCount} ");
+                //foreach (bool b in result)
+                //    Console.Write(b ? 1 : 0);
+                //Console.WriteLine();
+                return null;
+               
+            }
+        }
+
     }
 }
