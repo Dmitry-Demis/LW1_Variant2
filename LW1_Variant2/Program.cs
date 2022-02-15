@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace LW1_Variant2
@@ -191,14 +192,14 @@ namespace LW1_Variant2
             };
             const string key = "Xe3czSLq";
             var bytesArray = Encoding.ASCII.GetBytes(key);
-            var k = new byte[12, 8];
+            var k = new byte[13, 8];
             for (var col = 0; col < 8; col++)
             {
                 k[0, col] = bytesArray[col];
             }
-            for (var row = 1; row < 12; row++)
+            for (var row = 1; row < k.GetLength(0); row++)
             {
-                for (var col = 0; col < 8; col++)
+                for (var col = 0; col < k.GetLength(1); col++)
                 {
                     k[row, col] = (byte)((byte)((k[row - 1, col] << 3) | (k[row - 1, col] >> 5))+c[row - 1]);
                 }
@@ -217,6 +218,7 @@ namespace LW1_Variant2
                     //{
                     //    eightBytes[j] = result[j];
                     //}
+                    Dictionary<int, (byte y1, byte y2)> dictionary = new();
                     var eightBytes = result.Skip(i).Take(8).ToArray();
                     for (var round = 0; round < 6; round++)
                     {
@@ -234,6 +236,35 @@ namespace LW1_Variant2
                             eightBytes[index] = lTable[eightBytes[index]];
                             eightBytes[index] ^= k[2 * round + 1, index];
                         }
+
+                        int[] order = { 0, 2, 4, 6, 1, 3, 5, 7 };
+                        var pht = new byte[8];
+                        var y = new byte[8];
+                        for (var m = 0; m < 3; m++)
+                        {
+                            for (var j = 0; j < 7; j += 2)
+                            {
+                                var y1 = (byte)(2 * eightBytes[j] + eightBytes[j + 1]);
+                                var y2 = (byte)(eightBytes[j] + eightBytes[j + 1]);
+                                y[j] = y1;
+                                y[j + 1] = y2;
+                            }
+
+                            if (m<2)
+                            {
+                                var z = 0;
+                                foreach (var index in order)
+                                {
+                                    pht[z++] = y[index];
+                                }
+
+                                for (var j = 0; j < 8; j++)
+                                {
+                                    eightBytes[j] = pht[j];
+                                }
+                            }
+                        }
+                        
 
                     }
                 }
