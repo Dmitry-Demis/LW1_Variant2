@@ -201,16 +201,18 @@ namespace LW1_Variant2
             {
                 for (var col = 0; col < k.GetLength(1); col++)
                 {
-                    k[row, col] = (byte)((byte)((k[row - 1, col] << 3) | (k[row - 1, col] >> 5))+c[row - 1]);
+                    k[row, col] = (byte)((byte)((k[row - 1, col] << 3) | (k[row - 1, col] >> 5)) + c[row - 1]);
                 }
             }
             const string path = @"PlainText.TXT";
-
-            using (var sw = new BinaryReader(File.Open(path, FileMode.Open)))
+            const string path_encrypted = @"PlainTextEncrypted.TXT";
+            int[] blockForXor = { 0, 3, 4, 7 };
+            int[] blockForSum = { 1, 2, 5, 6 };
+            using (var br = new BinaryReader(File.Open(path, FileMode.Open)))
             {
                 // Считываем весь файл, кратный 8 байтам
-                var result = sw.ReadBytes((int)new FileInfo(path).Length);
-                for (var i = 0; i < result.Length; i+=8)
+                var result = br.ReadBytes((int)new FileInfo(path).Length);
+                for (var i = 0; i < result.Length; i += 8)
                 {
                     // Считываем блоки по 8 байт
                     //var eightBytes = new byte[8];
@@ -220,16 +222,16 @@ namespace LW1_Variant2
                     //}
                     Dictionary<int, (byte y1, byte y2)> dictionary = new();
                     var eightBytes = result.Skip(i).Take(8).ToArray();
+
                     for (var round = 0; round < 6; round++)
                     {
-                        int[] blockForXor = { 0, 3, 4, 7 };
+
                         foreach (var index in blockForXor)
                         {
                             eightBytes[index] ^= k[2 * round, index];
                             eightBytes[index] = eTable[eightBytes[index]];
                             eightBytes[index] = (byte)(eightBytes[index] + k[2 * round + 1, index]);
                         }
-                        int[] blockForSum = { 1, 2, 5, 6 };
                         foreach (var index in blockForSum)
                         {
                             eightBytes[index] = (byte)(eightBytes[index] + k[2 * round, index]);
@@ -250,27 +252,63 @@ namespace LW1_Variant2
                                 y[j + 1] = y2;
                             }
 
-                            if (m<2)
+                            if (m < 2)
                             {
                                 var z = 0;
                                 foreach (var index in order)
                                 {
                                     pht[z++] = y[index];
                                 }
-
                                 for (var j = 0; j < 8; j++)
                                 {
                                     eightBytes[j] = pht[j];
                                 }
                             }
                         }
-                        
+                        for (var j = 0; j < 8; j++)
+                        {
+                            eightBytes[j] = y[j];
+                        }
+                    }
+                    foreach (var index in blockForXor)
+                    {
+                        eightBytes[index] ^= k[k.GetLength(0) - 1, index];
 
+                    }
+                    foreach (var index in blockForSum)
+                    {
+                        eightBytes[index] = (byte)(eightBytes[index] + k[k.GetLength(0) - 1, index]);
+
+                    }
+                    using (var bw = new BinaryWriter(File.Open(path_encrypted, FileMode.Append)))
+                    {
+                        bw.Write(eightBytes);
+                        bw.Close();
                     }
                 }
 
             }
-            
+
+            // Расшифрование 
+            using (var brE = new BinaryReader(File.Open(path_encrypted, FileMode.Open)))
+            {
+                // Считываем весь файл, кратный 8 байтам
+                var result = brE.ReadBytes((int)new FileInfo(path_encrypted).Length);
+                for (var i = 0; i < result.Length; i += 8)
+                {
+                    var eightBytes = result.Skip(i).Take(8).ToArray();
+                    foreach (var index in blockForXor)
+                    {
+                        eightBytes[index] ^= k[k.GetLength(0) - 1, index];
+
+                    }
+                    foreach (var index in blockForSum)
+                    {
+                        eightBytes[index] = (byte)(eightBytes[index] - k[k.GetLength(0) - 1, index]);
+
+                    }
+                }
+            }
         }
 
     }
