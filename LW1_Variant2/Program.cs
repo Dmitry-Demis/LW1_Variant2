@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 
 namespace LW1_Variant2
@@ -35,7 +33,6 @@ namespace LW1_Variant2
                     swEncrypted.Write(cI);
                 }
             }
-
             //Считывание зашифрованного текста
             using var srDecrypted = new BinaryReader(File.Open(encryptedPath, FileMode.Open));
             var bytes = srDecrypted.ReadBytes(result.Length);
@@ -51,7 +48,6 @@ namespace LW1_Variant2
                 var @char = (char)pI;
                 swEncryptedText.Write(@char);
             }
-
         }
         static void SecondLaboratory()
         {
@@ -94,9 +90,9 @@ namespace LW1_Variant2
                 }
             }
         }
-
         static void ThirdLaboratory()
         {
+            Console.WriteLine("Загрузка...");
             byte[] eTable =
             {
                 1, 45, 226, 147, 190, 69, 21, 174,
@@ -206,8 +202,7 @@ namespace LW1_Variant2
             }
             const string path = @"PlainText.TXT";
             const string pathEncrypted = @"PlainTextEncrypted.TXT";
-            const string pathDecrypted = @"PlainTextDecrypted.TXT";
-           
+            const string pathDecrypted = @"PlainTextDecrypted.TXT";           
             if (File.Exists(pathDecrypted))
             {
                 File.Delete(pathDecrypted);
@@ -218,66 +213,45 @@ namespace LW1_Variant2
             }
             int[] blockForXor = { 0, 3, 4, 7 };
             int[] blockForSum = { 1, 2, 5, 6 };
-            var r = 6;
+            var r = 6; // Число раундов           
+            var finalIndex = 2 * r + 1;  // Финальный индекс ключа
+            Console.WriteLine("Шифрование...");
             using (var br = new BinaryReader(File.Open(path, FileMode.Open)))
-            {
-               
+            {               
                 // Считываем весь файл, кратный 8 байтам
                 var result = br.ReadBytes((int)new FileInfo(path).Length);
                 for (var i = 0; i < result.Length; i += 8)
-                {
-                   
+                {                   
                     // 64-битовый блок открытого текста делится на 8 байтовых подблоков 
                     var eightBytes = result.Skip(i).Take(8).ToArray();
                     // Затем подблоки обрабатываются в ходе r раундов
-                    for (var round = 1; round < 7; round++)
+                    for (var round = 1; round < r + 1; round++) 
                     {
-                        var keyIndex = 2 * round - 1;
-                        var keyIndex2 = 2 * round;
+                        var keyIndex = 2 * round - 1; // первый индекс ключа
+                        var keyIndex2 = 2 * round; // второй индекс ключа
                         foreach (var index in blockForXor)
                         {
                             // Сначала над подблоками выполняется операция XOR
                             eightBytes[index] ^= k[keyIndex - 1, index];
                             // Затем подблоки подвергаются E преобразованию
-                            
-                            // Затем над подблоками выполняется операция + c байтами подключа K_{2i}
-                          //  eightBytes[index] = (byte)(eightBytes[index] + k[2 * round + 1, index]);
+                            eightBytes[index] = eTable[eightBytes[index]];
+                            // Затем над подблоками выполняется операция сложения c байтами подключа K_{2i}
+                            eightBytes[index] = (byte)(eightBytes[index] + k[keyIndex2 - 1, index]);
                         }
                         foreach (var index in blockForSum)
                         {
                             // Сначала над подблоками выполняется сложение с байтами подключа K_{2i-1}
                             eightBytes[index] = (byte)(eightBytes[index] + k[keyIndex - 1, index]);
-                            //  Затем 4 подблока подвергаются L преобразованию
-                             
-                            // Затем над подблоками выполняется операция XOR c байтами подключа K_{2i}
-                           // eightBytes[index] ^= k[2 * round + 1, index];
-                        }
-
-                        foreach (var index in blockForXor)
-                        {
-                            eightBytes[index] = eTable[eightBytes[index]];
-                        }
-
-                        foreach (var index in blockForSum)
-                        {
+                            // Затем подблоки подвергаются L преобразованию
                             eightBytes[index] = lTable[eightBytes[index]];
-                        }
-                        ///
-                        foreach (var index in blockForXor)
-                        {
-                            eightBytes[index] = (byte)(eightBytes[index] + k[keyIndex2 -  1, index]);
-                        }
-
-                        foreach (var index in blockForSum)
-                        {
+                            // Затем над подблоками выполняется операция XOR c байтами подключа K_{2i}
                             eightBytes[index] ^= k[keyIndex2 - 1, index];
-                        }
+                        }                       
                         //Если на входе PHT x1 и x2, то на выходе
-                        //y1 = (2x1 + x2) mod 256;
-                        //y2 = (x1 + x2) mod 256.
-
-                        int[] order = { 0, 2, 4, 6, 1, 3, 5, 7 };
-                        var pht = new byte[8];
+                        //y1 = (2x_1 + x_2) mod 256;
+                        //y2 = (x_1 + x_2) mod 256.
+                        int[] order = { 0, 2, 4, 6, 1, 3, 5, 7 }; // Новый порядок байтов
+                        var pht = new byte[8]; // Вспомогательный массив для перестановки
                         for (var m = 0; m < 3; m++)
                         {
                             for (var j = 0; j < 7; j += 2)
@@ -287,7 +261,6 @@ namespace LW1_Variant2
                                 eightBytes[j] = y1;
                                 eightBytes[j + 1] = y2;
                             }
-
                             if (m < 2)
                             {
                                 var z = 0;
@@ -301,58 +274,46 @@ namespace LW1_Variant2
                                 }
                             }
                         }
-                    }
-                    var finalIndex = 2 * r + 1;
+                    }                    
                     foreach (var index in blockForXor)
                     {
                         eightBytes[index] ^= k[finalIndex - 1, index];
-
                     }
                     foreach (var index in blockForSum)
                     {
                         eightBytes[index] = (byte)(eightBytes[index] + k[finalIndex - 1, index]);
-
                     }
-                        using (var bw = new BinaryWriter(File.Open(pathDecrypted, FileMode.Append)))
+                    using (var bw = new BinaryWriter(File.Open(pathDecrypted, FileMode.Append)))
                     {
                         bw.Write(eightBytes);
                     }
                 }
-
             }
-            
+            Console.WriteLine("Расшифрование...");
             // Расшифрование 
             using (var brE = new BinaryReader(File.Open(pathDecrypted, FileMode.Open)))
-            {
-              
+            {              
                 // Считываем весь файл, кратный 8 байтам
                 var result = brE.ReadBytes((int)new FileInfo(pathDecrypted).Length);
-                var finalIndex = 2 * r + 1;
                 for (var i = 0; i < result.Length; i += 8)
                 {
-                    int[] lValues = { 0, 2, 5, 6 };
-                    int[] eValues = { 1, 3, 4, 7 };
                     // Заключительное преобразование
                     var eightBytes = result.Skip(i).Take(8).ToArray();
                     foreach (var index in blockForXor)
                     {
                         eightBytes[index] ^= k[finalIndex - 1, index];
-
                     }
-
                     foreach (var index in blockForSum)
                     {
                         eightBytes[index] = (byte)(eightBytes[index] - k[finalIndex - 1, index]);
-
                     }
-
-                    // затем r инвертированных раундов
-                    for (var round = 1; round < 7; round++)
+                    // Затем r инвертированных раундов
+                    for (var round = 1; round < r + 1; round++)
                     {
                         var keyIndex = 2 * r + 1 - 2 * round;
-                        int[] order = { 0, 4, 1, 5, 2, 6, 3, 7 };
+                        var keyIndex2 = 2 * r + 2 - 2 * round;
+                        int[] order = { 0, 4, 1, 5, 2, 6, 3, 7 }; // Новый порядок байтов
                         var pht = new byte[8];
-
                         for (int m = 0; m < 3; m++)
                         {
                             for (var j = 0; j < 7; j += 2)
@@ -362,7 +323,6 @@ namespace LW1_Variant2
                                 eightBytes[j] = y1;
                                 eightBytes[j + 1] = y2;
                             }
-
                             if (m < 2)
                             {
                                 var z = 0;
@@ -370,64 +330,32 @@ namespace LW1_Variant2
                                 {
                                     pht[z++] = eightBytes[index];
                                 }
-
                                 for (var j = 0; j < 8; j++)
                                 {
                                     eightBytes[j] = pht[j];
                                 }
                             }
                         }
-                        ///
-                        var keyIndex2 = 2 * r + 2 - 2 * round;
                         foreach (var index in blockForXor)
                         {
                             eightBytes[index] = (byte)(eightBytes[index] - k[keyIndex2 - 1, index]);
+                            eightBytes[index] = lTable[eightBytes[index]];
+                            eightBytes[index] ^= k[keyIndex - 1, index];
                         }
-
                         foreach (var index in blockForSum)
                         {
                             eightBytes[index] ^= k[keyIndex2 - 1, index];
-                        }
-
-                        foreach (var index in blockForXor)
-                        {
-                            eightBytes[index] = lTable[eightBytes[index]];
-                        }
-
-                        foreach (var index in blockForSum)
-                        {
                             eightBytes[index] = eTable[eightBytes[index]];
-                        }
-                        foreach (var index in blockForXor)
-                        {
-                            // Сначала над подблоками выполняется сложение с байтами подключа K_{2i-1}
-                          //  eightBytes[index] = (byte)(eightBytes[index] - k[2 * round + 1, index]);
-                            // Затем подблоки подвергаются E преобразованию
-                           //eightBytes[index] = lTable[eightBytes[index]];
-                            // Сначала над подблоками выполняется операция XOR
-                            eightBytes[index] ^= k[keyIndex - 1, index];
-                        }
-
-                        foreach (var index in blockForSum)
-                        {
-                            // Затем над подблоками выполняется операция XOR c байтами подключа K_{2i}
-                            //  eightBytes[index] ^= k[2 * round + 1, index];
-                            //  Затем 4 подблока подвергаются L преобразованию
-                            //eightBytes[index] = eTable[eightBytes[index]];
-                            // Затем над подблоками выполняется операция + c байтами подключа K_{2i}
                             eightBytes[index] = (byte)(eightBytes[index] - k[keyIndex - 1, index]);
-                        }
-                      
-                    }
-
-                    
+                        }                      
+                    }                    
                     using (var bw = new BinaryWriter(File.Open(pathEncrypted, FileMode.Append)))
                     {
                         bw.Write(eightBytes);
                     }
                 }
             }
+            Console.WriteLine("Выполнение успешно");
         }
-
     }
 }
