@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace LW1_Variant2
@@ -10,7 +11,7 @@ namespace LW1_Variant2
     {
         static void Main(string[] args)
         {
-            ThirdLaboratory();
+            FifthLaboratory();
         }
         static void FirstLaboratory()
         {
@@ -356,6 +357,35 @@ namespace LW1_Variant2
                 }
             }
             Console.WriteLine("Выполнение успешно");
+        }
+        static void FourthLaboratory()
+        {
+            string word = "Procrastination";
+            byte[] array = Encoding.ASCII.GetBytes(word);
+            uint[] A = new uint[array.Length];
+            uint[] B = new uint[array.Length];
+            uint simpleNumber = 65521;
+            A[0] = (uint)(array[0] + 1);
+            B[0] = A[0];
+            for (int i = 1; i < array.Length; i++)
+            {
+                A[i] = (A[i - 1] + array[i]) % simpleNumber;
+                B[i] = (B[i - 1] + A[i]) % simpleNumber;
+            }
+            Console.WriteLine
+                (string.Concat
+                    (
+                    Convert.ToString(B[array.Length - 1], toBase: 16).PadLeft(4, '0').ToUpper(),
+                    Convert.ToString(A[array.Length - 1], toBase: 16).PadLeft(4, '0').ToUpper()
+                    )
+                );
+        }
+        static void FifthLaboratory()
+        {
+            int v = 17;
+            string n = "0F";
+            BigInteger p = BigInteger.Parse(n, System.Globalization.NumberStyles.HexNumber);
+            Console.WriteLine(p);
         }
     }
 }
