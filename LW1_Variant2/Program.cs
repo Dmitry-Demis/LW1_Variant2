@@ -11,7 +11,7 @@ namespace LW1_Variant2
     {
         static void Main(string[] args)
         {
-            FifthLaboratory();
+            FourthLaboratory();
         }
         static void FirstLaboratory()
         {
@@ -360,17 +360,17 @@ namespace LW1_Variant2
         }
         static void FourthLaboratory()
         {
-            string word = "Procrastination";
+            var word = "Procrastination";
             byte[] array = Encoding.ASCII.GetBytes(word);
             uint[] A = new uint[array.Length];
             uint[] B = new uint[array.Length];
-            uint simpleNumber = 65521;
+            uint primeNumber = 65521;
             A[0] = (uint)(array[0] + 1);
             B[0] = A[0];
             for (int i = 1; i < array.Length; i++)
             {
-                A[i] = (A[i - 1] + array[i]) % simpleNumber;
-                B[i] = (B[i - 1] + A[i]) % simpleNumber;
+                A[i] = (A[i - 1] + array[i]) % primeNumber;
+                B[i] = (B[i - 1] + A[i]) % primeNumber;
             }
             Console.WriteLine
                 (string.Concat
@@ -382,10 +382,157 @@ namespace LW1_Variant2
         }
         static void FifthLaboratory()
         {
-            int v = 17;
-            string n = "0F";
-            BigInteger p = BigInteger.Parse(n, System.Globalization.NumberStyles.HexNumber);
-            Console.WriteLine(p);
+            // Y^2 = X^3 + аХ + b
+           Random random = new Random();
+            BigInteger p = BigInteger.Parse("0"+"8000000000000000000000000000000000000000000000000000000000000431", System.Globalization.NumberStyles.HexNumber);
+            BigInteger a = BigInteger.Parse("0"+ "7", System.Globalization.NumberStyles.HexNumber);
+            BigInteger b = BigInteger.Parse("0"+ "5FBFF498AA938CE739B8E022FBAFEF40563F6E6A3472FC2A514C0CE9DAE23B7E", System.Globalization.NumberStyles.HexNumber);
+            BigInteger q = BigInteger.Parse("0"+ "8000000000000000000000000000000150FE8A1892976154C59CFC193ACCF5B3", System.Globalization.NumberStyles.HexNumber);
+            BigInteger xG = BigInteger.Parse("0"+ "2", System.Globalization.NumberStyles.HexNumber);
+            BigInteger yG = BigInteger.Parse("0"+ "8E2A8A0E65147D4BD6316030E16D19C85C97F0A9CA267122B96ABBCEA7E8FC8", System.Globalization.NumberStyles.HexNumber);
+            BigInteger nA = q - 100;
+            BigInteger nB = q - 200;
+            Console.WriteLine(AdvancedEuclidAlgorithm(11, 3));
+           
+            (BigInteger x3, BigInteger y3) MultiplyBy2(BigInteger x, BigInteger y, BigInteger modulus)
+            {
+                BigInteger first = 3 * BigInteger.ModPow(x, 2, modulus); // 3x^2
+                BigInteger second = (first + a) % modulus; // 3x^2 + a
+                BigInteger third = (2 * y) % modulus; // 2y
+                BigInteger thirdInverse = AdvancedEuclidAlgorithm(modulus, third);
+                BigInteger k = (second * thirdInverse) % modulus;
+                BigInteger x3 = BigInteger.ModPow(k, 2, modulus) - 
+            }
+
+            BigInteger AdvancedEuclidAlgorithm(BigInteger a, BigInteger b)
+            {
+                if (a < b)
+                {
+                    throw new ArgumentException();
+                }
+                BigInteger[] u = new BigInteger[] { a, 1, 0 };
+                BigInteger[] v = new BigInteger[] { b, 0, 1 };
+                BigInteger[] t = new BigInteger[3];
+                while (v[0]!=0)
+                {
+                    BigInteger q = u[0] / v[0];
+                    t[0] = u[0] % v[0];
+                    t[1] = u[1] - q * v[1];
+                    t[2] = u[2] - q * v[2];
+                    u = (BigInteger[])v.Clone();
+                    v = (BigInteger[])t.Clone();
+                }
+                return u[2];
+            }
+
+        }
+    }
+    public static class BigIntegerExtensions
+    {
+        /// <summary>
+        /// Converts a <see cref="BigInteger"/> to a binary string.
+        /// </summary>
+        /// <param name="bigint">A <see cref="BigInteger"/>.</param>
+        /// <returns>
+        /// A <see cref="System.String"/> containing a binary
+        /// representation of the supplied <see cref="BigInteger"/>.
+        /// </returns>
+        public static string ToBinaryString(this BigInteger bigint)
+        {
+            var bytes = bigint.ToByteArray();
+            var idx = bytes.Length - 1;
+
+            // Create a StringBuilder having appropriate capacity.
+            var base2 = new StringBuilder(bytes.Length * 8);
+
+            // Convert first byte to binary.
+            var binary = Convert.ToString(bytes[idx], 2);
+
+            // Ensure leading zero exists if value is positive.
+            if (binary[0] != '0' && bigint.Sign == 1)
+            {
+                base2.Append('0');
+            }
+
+            // Append binary string to StringBuilder.
+            base2.Append(binary);
+
+            // Convert remaining bytes adding leading zeros.
+            for (idx--; idx >= 0; idx--)
+            {
+                base2.Append(Convert.ToString(bytes[idx], 2).PadLeft(8, '0'));
+            }
+
+            return base2.ToString();
+        }
+
+        /// <summary>
+        /// Converts a <see cref="BigInteger"/> to a hexadecimal string.
+        /// </summary>
+        /// <param name="bigint">A <see cref="BigInteger"/>.</param>
+        /// <returns>
+        /// A <see cref="System.String"/> containing a hexadecimal
+        /// representation of the supplied <see cref="BigInteger"/>.
+        /// </returns>
+        public static string ToHexadecimalString(this BigInteger bigint)
+        {
+            return bigint.ToString("X");
+        }
+
+        /// <summary>
+        /// Converts a <see cref="BigInteger"/> to a octal string.
+        /// </summary>
+        /// <param name="bigint">A <see cref="BigInteger"/>.</param>
+        /// <returns>
+        /// A <see cref="System.String"/> containing an octal
+        /// representation of the supplied <see cref="BigInteger"/>.
+        /// </returns>
+        public static string ToOctalString(this BigInteger bigint)
+        {
+            var bytes = bigint.ToByteArray();
+            var idx = bytes.Length - 1;
+
+            // Create a StringBuilder having appropriate capacity.
+            var base8 = new StringBuilder(((bytes.Length / 3) + 1) * 8);
+
+            // Calculate how many bytes are extra when byte array is split
+            // into three-byte (24-bit) chunks.
+            var extra = bytes.Length % 3;
+
+            // If no bytes are extra, use three bytes for first chunk.
+            if (extra == 0)
+            {
+                extra = 3;
+            }
+
+            // Convert first chunk (24-bits) to integer value.
+            int int24 = 0;
+            for (; extra != 0; extra--)
+            {
+                int24 <<= 8;
+                int24 += bytes[idx--];
+            }
+
+            // Convert 24-bit integer to octal without adding leading zeros.
+            var octal = Convert.ToString(int24, 8);
+
+            // Ensure leading zero exists if value is positive.
+            if (octal[0] != '0' && bigint.Sign == 1)
+            {
+                base8.Append('0');
+            }
+
+            // Append first converted chunk to StringBuilder.
+            base8.Append(octal);
+
+            // Convert remaining 24-bit chunks, adding leading zeros.
+            for (; idx >= 0; idx -= 3)
+            {
+                int24 = (bytes[idx] << 16) + (bytes[idx - 1] << 8) + bytes[idx - 2];
+                base8.Append(Convert.ToString(int24, 8).PadLeft(8, '0'));
+            }
+
+            return base8.ToString();
         }
     }
 }
