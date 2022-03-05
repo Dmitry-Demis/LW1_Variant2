@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -11,7 +12,7 @@ namespace LW1_Variant2
     {
         static void Main(string[] args)
         {
-            FourthLaboratory();
+            FifthLaboratory();
         }
         static void FirstLaboratory()
         {
@@ -392,23 +393,65 @@ namespace LW1_Variant2
             BigInteger yG = BigInteger.Parse("0"+ "8E2A8A0E65147D4BD6316030E16D19C85C97F0A9CA267122B96ABBCEA7E8FC8", System.Globalization.NumberStyles.HexNumber);
             BigInteger nA = q - 100;
             BigInteger nB = q - 200;
-            Console.WriteLine(AdvancedEuclidAlgorithm(11, 3));
-           
-            (BigInteger x3, BigInteger y3) MultiplyBy2(BigInteger x, BigInteger y, BigInteger modulus)
+            a = 2;
+            b = 6;
+            p = 7;
+            var s = Composition(3, new BigIntegerPoint(5, 1), p);
+            
+
+
+            BigIntegerPoint MultiplyBy2(BigIntegerPoint point, BigInteger modulus)
             {
-                BigInteger first = 3 * BigInteger.ModPow(x, 2, modulus); // 3x^2
+                BigInteger first = 3 * BigInteger.ModPow(point.X, 2, modulus); // 3x^2
                 BigInteger second = (first + a) % modulus; // 3x^2 + a
-                BigInteger third = (2 * y) % modulus; // 2y
+                BigInteger third = (2 * point.Y) % modulus; // 2y
                 BigInteger thirdInverse = AdvancedEuclidAlgorithm(modulus, third);
                 BigInteger k = (second * thirdInverse) % modulus;
-                BigInteger x3 = BigInteger.ModPow(k, 2, modulus) - 
+                BigInteger x3 = (BigInteger.ModPow(k, 2, modulus) - (2 * point.X) % modulus)% modulus;
+                BigInteger y3 = (k * (point.X - x3) - point.Y) % modulus;
+                if (x3<0)
+                {
+                    x3 += modulus;
+                }
+                if (y3 < 0)
+                {
+                    y3 += modulus;
+                }
+                return new BigIntegerPoint(x3, y3);
             }
 
+            BigIntegerPoint Sum (BigIntegerPoint point1, BigIntegerPoint point2, BigInteger modulus)
+            {
+                BigInteger dy = (point2.Y - point1.Y) % modulus ;
+                if (dy < 0)
+                {
+                    dy += modulus;
+                }
+                BigInteger dx = (point2.X - point1.X) % modulus;
+                BigInteger dxInverse = AdvancedEuclidAlgorithm(modulus, dx);
+                BigInteger k = (dy * dxInverse) % modulus;
+                BigInteger x3 = (BigInteger.ModPow(k, 2, modulus) - point1.X - point2.X) % modulus;
+                if (x3 < 0)
+                {
+                    x3 += modulus;
+                }
+                BigInteger y3 = (k * (point1.X - x3) - point1.Y) % modulus;
+                
+                if (y3 < 0)
+                {
+                    y3 += modulus;
+                }
+                return new BigIntegerPoint(x3, y3);
+            }
             BigInteger AdvancedEuclidAlgorithm(BigInteger a, BigInteger b)
             {
                 if (a < b)
                 {
                     throw new ArgumentException();
+                }
+                if (b < 0)
+                {
+                    b += a;
                 }
                 BigInteger[] u = new BigInteger[] { a, 1, 0 };
                 BigInteger[] v = new BigInteger[] { b, 0, 1 };
@@ -424,7 +467,22 @@ namespace LW1_Variant2
                 }
                 return u[2];
             }
+            BigIntegerPoint Composition(BigInteger m, BigIntegerPoint point, BigInteger modulus)
+            {
+                string comp = m.ToBinaryString();
+                BigIntegerPoint q = Sum(point, new BigIntegerPoint(point.X, -point.Y + modulus), modulus);
+                for (int i = 0; i < comp.Length; i++)
+                {
+                    q = MultiplyBy2(q, modulus);
+                    if (comp[i]== '1')
+                    {
+                        q = Sum(q, point, modulus);
+                    }
 
+                }
+                return q;
+                
+            }
         }
     }
     public static class BigIntegerExtensions
@@ -535,4 +593,19 @@ namespace LW1_Variant2
             return base8.ToString();
         }
     }
+
+    public struct BigIntegerPoint
+    {
+        public BigInteger X { get; set; }
+        public BigInteger Y { get; set; }
+
+        public BigIntegerPoint(BigInteger x, BigInteger y)
+        {
+            X = x;
+            Y = y;
+        }
+        public static BigIntegerPoint operator +(BigIntegerPoint left, BigIntegerPoint right) 
+            => new BigIntegerPoint { X = left.X + right.X, Y = left.Y + right.Y };
+    }
+   
 }
