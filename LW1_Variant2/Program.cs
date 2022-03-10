@@ -401,6 +401,7 @@ namespace LW1_Variant2
             Console.WriteLine($"A = {AK}");
             Console.WriteLine($"A = {BK}");
             Console.WriteLine(AK==BK);
+            Console.WriteLine();
 
 
             BigIntegerPoint MultiplyBy2(BigIntegerPoint point, BigInteger modulus)
