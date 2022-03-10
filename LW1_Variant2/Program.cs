@@ -393,11 +393,14 @@ namespace LW1_Variant2
             BigInteger yG = BigInteger.Parse("0"+ "8E2A8A0E65147D4BD6316030E16D19C85C97F0A9CA267122B96ABBCEA7E8FC8", System.Globalization.NumberStyles.HexNumber);
             BigInteger nA = q - 100;
             BigInteger nB = q - 200;
-            a = 2;
-            b = 6;
-            p = 7;
-            var s = Composition(3, new BigIntegerPoint(5, 1), p);
-            
+            BigIntegerPoint G = new BigIntegerPoint(xG, yG);       
+            var pA = Composition(nA, G, p);
+            var pB = Composition(nB, G, p);
+            var AK = Composition(nA, pB, p);
+            var BK = Composition(nB, pA, p);
+            Console.WriteLine($"A = {AK}");
+            Console.WriteLine($"A = {BK}");
+            Console.WriteLine(AK==BK);
 
 
             BigIntegerPoint MultiplyBy2(BigIntegerPoint point, BigInteger modulus)
@@ -465,13 +468,14 @@ namespace LW1_Variant2
                     u = (BigInteger[])v.Clone();
                     v = (BigInteger[])t.Clone();
                 }
-                return u[2];
+                return (u[2] < 0) ? u[2] + a : u[2];
             }
             BigIntegerPoint Composition(BigInteger m, BigIntegerPoint point, BigInteger modulus)
             {
-                string comp = m.ToBinaryString();
-                BigIntegerPoint q = Sum(point, new BigIntegerPoint(point.X, -point.Y + modulus), modulus);
-                for (int i = 0; i < comp.Length; i++)
+                string comp = m.ToBinaryString();              
+                comp = new string(comp.SkipWhile((i) => i == '0').ToArray());
+                BigIntegerPoint q = point;
+                for (int i = 1; i < comp.Length; i++)
                 {
                     q = MultiplyBy2(q, modulus);
                     if (comp[i]== '1')
@@ -606,6 +610,11 @@ namespace LW1_Variant2
         }
         public static BigIntegerPoint operator +(BigIntegerPoint left, BigIntegerPoint right) 
             => new BigIntegerPoint { X = left.X + right.X, Y = left.Y + right.Y };
+        public override string ToString() => ($"({X}, {Y})");
+        public static bool operator ==(BigIntegerPoint left, BigIntegerPoint right)
+           => left.X == right.X && left.Y == right.Y;
+        public static bool operator !=(BigIntegerPoint left, BigIntegerPoint right)
+           => !(left==right);
     }
    
 }
